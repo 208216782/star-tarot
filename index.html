@@ -426,12 +426,12 @@
                         const labels = type === 'triangle' ? ['【过去】','【现在】','【未来】'] : [''];
                         return `${labels[i] || ''}「${c.name}」(${c.position})：${c.meaning}`;
                     }).join('\n');
-                    const prompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师。${type === 'daily' ? '这是每日运势占卜。' : ''}用户的问题/主题：${question || '今日运势指引'}\n抽到的牌：${cardsInfo}\n请用温柔、神秘、治愈的语气给出解读，不说绝对宿命，侧重心理投射与成长指引。`;
+                    const prompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师，拥有深刻的心理学和神秘学知识。${type === 'daily' ? '这是每日运势占卜。' : ''}用户的问题/主题：${question || '今日运势指引'}\n抽到的牌：${cardsInfo}\n\n请你：\n1. 不仅解读每张牌的含义，还要深入分析牌与牌之间的联系和流动\n2. 结合心理学视角，探讨用户当前的心理状态和潜意识\n3. 给出具体、可操作的建议，而不仅仅是泛泛而谈\n4. 可以适当运用象征、比喻和故事，让解读更生动\n5. 探讨可能的发展趋势和需要注意的深层问题\n6. 鼓励用户的自我成长和自我觉察\n\n请用温柔、神秘、治愈的语气给出解读，不说绝对宿命，侧重心理投射与成长指引。`;
                     const response = await fetch('/api/chat', {
                         method: 'POST', 
                         headers: { 'Content-Type':'application/json' },
                         body: JSON.stringify({ messages:[
-                            { role:'system', content:'你是专业温柔的AI塔罗师莱诺薇，给出温暖治愈的塔罗解读。' },
+                            { role:'system', content:'你是莱诺薇，一位专业、温柔、有仪式感的AI塔罗师，拥有深刻的心理学、哲学和神秘学知识。你不仅理解塔罗牌的表面含义，更能洞察牌面背后的深层心理象征、原型能量和生命智慧。你的解读温暖、深入、富有启发性，能够帮助用户获得自我觉察和成长。' },
                             { role:'user', content:prompt }
                         ]})
                     });
@@ -460,14 +460,21 @@
             },
             async chat(context, userMessage) {
                 try {
-                    const cardsInfo = context.cards.map(c => `「${c.name}」(${c.position})`).join('、');
-                    const prompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师。之前的占卜：牌阵${context.type}，问题「${context.question}」，抽到的牌：${cardsInfo}\n用户继续问：${userMessage}\n请以莱诺薇的身份回答，结合之前的牌面。`;
+                    let systemPrompt, userPrompt;
+                    if (context && context.cards) {
+                        const cardsInfo = context.cards.map(c => `「${c.name}」(${c.position})`).join('、');
+                        systemPrompt = '你是莱诺薇，一位专业、温柔、有仪式感的AI塔罗师，拥有深刻的心理学、哲学和神秘学知识。你不仅理解塔罗牌的表面含义，更能洞察牌面背后的深层心理象征、原型能量和生命智慧。你的解读温暖、深入、富有启发性，能够帮助用户获得自我觉察和成长。';
+                        userPrompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师，拥有深刻的心理学和神秘学知识。之前的占卜：牌阵${context.type}，问题「${context.question}」，抽到的牌：${cardsInfo}\n用户继续问：${userMessage}\n\n请你：\n1. 深入分析问题，不局限于表面\n2. 结合牌面和心理学视角回答\n3. 给出有深度、有启发性的回答\n4. 可以运用哲学、心理学、神秘学等多视角\n\n请以莱诺薇的身份回答，结合之前的牌面。`;
+                    } else {
+                        systemPrompt = '你是莱诺薇，一位温柔、智慧、有同理心的AI顾问和朋友。你拥有广泛的知识，包括心理学、哲学、生活智慧、神秘学等。你的回答温暖、深入、富有启发性，能够帮助用户获得自我觉察和成长。你可以和用户聊各种话题，既是专业的顾问，也是贴心的朋友。始终保持温柔、智慧、有同理心的语气，可以运用心理学、哲学等多视角回答问题。';
+                        userPrompt = `你是"莱诺薇"，一位温柔、智慧、有同理心的AI顾问和朋友。用户问：${userMessage}\n\n请你：\n1. 用温柔、温暖、治愈的语气回答\n2. 可以运用心理学、哲学、生活智慧、神秘学等多视角\n3. 给出有深度、有启发性的回答\n4. 如果是寻求建议的问题，给出实用、温暖的建议\n5. 如果是闲聊，可以轻松、友好地回应\n6. 始终保持温柔、智慧、有同理心的语气\n\n请以莱诺薇的身份回答。`;
+                    }
                     const response = await fetch('/api/chat', {
                         method: 'POST', 
                         headers: { 'Content-Type':'application/json' },
                         body: JSON.stringify({ messages:[
-                            { role:'system', content:'你是专业温柔的AI塔罗师莱诺薇。' },
-                            { role:'user', content:prompt }
+                            { role:'system', content:systemPrompt },
+                            { role:'user', content:userPrompt }
                         ]})
                     });
                     if (!response.ok) return '让我用心回答你...';
