@@ -267,6 +267,11 @@
                 <p class="api-hint">🔮 连接宇宙能量中...尽情探索吧！</p>
             </div>
             <div class="mode-grid">
+                <div class="mode-card" onclick="App.startDirectChat()">
+                    <div class="mode-icon">💬</div>
+                    <div class="mode-name">直接咨询</div>
+                    <div class="mode-desc">和莱诺薇直接对话，聊各种话题</div>
+                </div>
                 <div class="mode-card" onclick="App.startMode('daily')">
                     <div class="mode-icon">☀️</div>
                     <div class="mode-name">每日运势</div>
@@ -559,14 +564,17 @@
                     `;
                 }
             },
-            renderChat(context) {
+            renderChat(context, isDirect = false) {
+                const welcomeMessage = isDirect ? 
+                    "你好，我是莱诺薇。很高兴能和你聊天！你可以问我任何问题，我们可以聊各种话题~" :
+                    "你好，我是莱诺薇。关于这次的牌面，你还有什么想知道的吗？";
                 return `
                     <div class="chat-container">
                         <div class="chat-header"><div class="chat-avatar">🔮</div><div><div class="chat-name">莱诺薇</div><div class="chat-status">等待你的提问...</div></div></div>
                         <div class="chat-messages" id="chatMessages">
                             <div class="chat-message assistant">
                                 <div class="chat-message-avatar">🔮</div>
-                                <div class="chat-message-content">你好，我是莱诺薇。关于这次的牌面，你还有什么想知道的吗？</div>
+                                <div class="chat-message-content">${welcomeMessage}</div>
                             </div>
                         </div>
                         <div class="chat-input-area">
@@ -753,7 +761,7 @@
                 const input = document.getElementById('chatInput');
                 const sendBtn = document.getElementById('chatSendBtn');
                 const msg = input.value.trim();
-                if (!msg || !this.chatContext) return;
+                if (!msg) return;
                 this.addChatMessage('user', msg);
                 input.value = '';
                 sendBtn.disabled = true;
@@ -802,10 +810,28 @@
                 const chatInput = document.getElementById('chatInput');
                 if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.sendChat(); });
             },
+            startDirectChat() {
+                this.currentMode = 'chat';
+                this.chatContext = null;
+                this.showPage('ritual');
+                UI.renderRitualStage(`
+                    <div class="stage-instruction">
+                        <div class="instruction-title">💬 直接咨询</div>
+                        <div class="instruction-text">和莱诺薇直接对话，聊各种话题</div>
+                    </div>
+                    ${UI.renderChat(null, true)}
+                    <div class="action-buttons">
+                        <button class="action-btn secondary" onclick="App.goHome()">返回首页</button>
+                    </div>
+                `);
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.sendChat(); });
+            },
             goHome() {
                 this.currentMode = null; this.currentCards = null;
                 this.currentReading = null; this.currentQuestion = '';
                 this.selectedCategory = '';
+                this.chatContext = null;
                 this.showPage('home');
             },
             delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
