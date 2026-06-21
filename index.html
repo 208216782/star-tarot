@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ 星语塔罗 · 命运之门</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%);
+            min-height: 100vh;
+            font-family: 'Georgia', 'Noto Serif SC', serif;
+            color: #e8e0d0;
+            overflow-x: hidden;
+        }
+        .mystical-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .particle {
+            position: absolute; width: 3px; height: 3px;
+            background: #c9a0dc; border-radius: 50%; opacity: 0.4;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+        @keyframes twinkle { 0%,100% { opacity:0.3; transform:scale(1); } 50% { opacity:0.8; transform:scale(1.2); } }
+        .magic-circle {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 600px; height: 600px; border: 2px solid rgba(201,160,220,0.1);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+        }
+        .magic-circle::before, .magic-circle::after {
+            content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            border-radius:50%; border:1px solid rgba(201,160,220,0.08);
+        }
+        .magic-circle::before { width:80%; height:80%; }
+        .magic-circle::after { width:60%; height:60%; }
+        .container { max-width:900px; margin:0 auto; padding:30px 20px; position:relative; z-index:1; }
+        .header { text-align:center; margin-bottom:40px; }
+        .app-title {
+            font-size:42px; background: linear-gradient(135deg, #e8d0b0, #c9a0dc, #ffd700);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; text-shadow:0 0 30px rgba(201,160,220,0.3);
+            margin-bottom:10px; letter-spacing:8px;
+        }
+        .app-subtitle { font-size:16px; color:#a09080; letter-spacing:4px; }
+        .nav-tabs {
+            display:flex; justify-content:center; gap:15px; margin-top:30px; flex-wrap:wrap;
+        }
+        .nav-tab {
+            padding:14px 28px; background:rgba(255,255,255,0.05);
+            border:2px solid rgba(201,160,220,0.2); border-radius:30px;
+            cursor:pointer; transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+            color:#c0b0a0; letter-spacing:2px;
+        }
+        .nav-tab:hover { background:rgba(201,160,220,0.1); border-color:rgba(201,160,220,0.4); transform:translateY(-3px); }
+        .nav-tab.active {
+            background:linear-gradient(135deg, rgba(201,160,220,0.2), rgba(102,126,234,0.2));
+            border-color:#c9a0dc; color:#e8d0b0; box-shadow:0 0 30px rgba(201,160,220,0.2);
+        }
+        .page { display:none; }
+        .page.active { display:block; animation:fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .mode-grid {
+            display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+            gap:25px; margin-top:20px;
+        }
+        .mode-card {
+            background:rgba(255,255,255,0.03); border:2px solid rgba(201,160,220,0.15);
+            border-radius:20px; padding:35px 25px; cursor:pointer;
+            transition:all 0.4s cubic-bezier(0.4,0,0.2,1); text-align:center;
+        }
+        .mode-card:hover {
+            background:rgba(201,160,220,0.08); border-color:rgba(201,160,220,0.4);
+            transform:translateY(-8px); box-shadow:0 20px 50px rgba(0,0,0,0.4);
+        }
+        .mode-icon { font-size:60px; margin-bottom:20px; }
+        .mode-name { font-size:24px; color:#e8d0b0; margin-bottom:10px; letter-spacing:3px; }
+        .mode-desc { font-size:14px; color:#908880; line-height:1.8; }
+        .api-config {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(201,160,220,0.15);
+            border-radius:15px; padding:25px; margin-bottom:30px;
+        }
+        .api-label { display:block; font-size:16px; color:#c9a0dc; margin-bottom:12px; }
+        .api-input {
+            width:100%; padding:14px 18px; background:rgba(0,0,0,0.3);
+            border:1px solid rgba(201,160,220,0.2); border-radius:10px; color:#e8e0d0;
+            font-size:14px; font-family:monospace;
+        }
+        .api-input:focus { outline:none; border-color:#c9a0dc; }
+        .api-hint { margin-top:10px; font-size:13px; color:#706860; }
+        .api-hint a { color:#c9a0dc; text-decoration:none; }
+        .ritual-stage { min-height:500px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .stage-instruction { text-align:center; margin-bottom:40px; }
+        .instruction-title { font-size:28px; color:#e8d0b0; margin-bottom:15px; letter-spacing:4px; }
+        .instruction-text { font-size:15px; color:#908880; line-height:1.8; }
+        .question-section { width:100%; max-width:600px; margin-bottom:30px; }
+        .question-label { display:block; font-size:16px; color:#c9a0dc; margin-bottom:12px; }
+        .question-textarea {
+            width:100%; min-height:100px; padding:18px; background:rgba(0,0,0,0.3);
+            border:1px solid rgba(201,160,220,0.2); border-radius:12px; color:#e8e0d0;
+            font-size:15px; resize:vertical; font-family:inherit; line-height:1.7;
+        }
+        .question-textarea:focus { outline:none; border-color:#c9a0dc; }
+        .category-selector { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:30px; }
+        .category-btn {
+            padding:10px 20px; background:rgba(255,255,255,0.03);
+            border:1px solid rgba(201,160,220,0.2); border-radius:20px;
+            color:#a09080; cursor:pointer; transition:all 0.3s; font-size:14px;
+        }
+        .category-btn:hover { background:rgba(201,160,220,0.1); }
+        .category-btn.selected {
+            background:rgba(201,160,220,0.15); border-color:#c9a0dc; color:#e8d0b0;
+        }
+        .summon-btn {
+            padding:18px 60px; background:linear-gradient(135deg, #667eea, #764ba2);
+            border:none; border-radius:50px; color:white; font-size:18px; font-weight:bold;
+            cursor:pointer; letter-spacing:4px; transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+            box-shadow:0 10px 40px rgba(102,126,234,0.3);
+        }
+        .summon-btn:hover:not(:disabled) { transform:scale(1.05); box-shadow:0 15px 50px rgba(102,126,234,0.5); }
+        .summon-btn:disabled { opacity:0.6; cursor:not-allowed; }
+        .cards-container { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:30px 0; perspective:1500px; }
+        .card-wrapper { perspective:1000px; }
+        .card { width:180px; height:270px; position:relative; transform-style:preserve-3d; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
+        .card.spinning { animation:cardSpin 2s linear infinite; }
+        @keyframes cardSpin { from { transform:rotateY(0deg); } to { transform:rotateY(360deg); } }
+        .card.flipped { transform:rotateY(180deg); }
+        .card-face {
+            position:absolute; width:100%; height:100%; backface-visibility:hidden;
+            border-radius:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:20px; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+        }
+        .card-front { background:linear-gradient(135deg, #2c3e50, #1a1a2e); border:3px solid #c9a0dc; }
+        .card-front::before {
+            content:'✧✦✧'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            font-size:50px; color:rgba(201,160,220,0.3);
+        }
+        .card-back { background:linear-gradient(135deg, #1a1a2e, #2c3e50); border:3px solid #c9a0dc; transform:rotateY(180deg); }
+        .card-icon { font-size:60px; margin-bottom:15px; }
+        .card-name { font-size:20px; color:#e8d0b0; margin-bottom:10px; text-align:center; }
+        .card-position { font-size:14px; padding:6px 18px; border-radius:15px; margin-bottom:12px; }
+        .card-position.upright { background:rgba(102,126,234,0.2); color:#667eea; }
+        .card-position.reversed { background:rgba(255,107,107,0.2); color:#ff6b6b; }
+        .card-meaning { font-size:13px; color:#908880; text-align:center; line-height:1.6; }
+        .card-label {
+            position:absolute; top:-35px; left:50%; transform:translateX(-50%);
+            font-size:14px; color:#c9a0dc; white-space:nowrap; letter-spacing:2px;
+        }
+        .reading-panel {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(201,160,220,0.15);
+            border-radius:15px; padding:35px; margin-top:40px;
+        }
+        .reading-title { font-size:28px; color:#e8d0b0; text-align:center; margin-bottom:30px; letter-spacing:4px; }
+        .reading-section { margin-bottom:25px; }
+        .reading-section-title {
+            font-size:18px; color:#c9a0dc; margin-bottom:12px; display:flex; align-items:center; gap:10px;
+        }
+        .reading-section-title::before { content:'✦'; color:#c9a0dc; }
+        .reading-section-content { font-size:15px; color:#c0b0a0; line-height:1.9; padding-left:25px; white-space:pre-wrap; }
+        .loading-ai { text-align:center; padding:40px; }
+        .loading-spinner {
+            width:50px; height:50px; border:3px solid rgba(201,160,220,0.2);
+            border-top-color:#c9a0dc; border-radius:50%; animation:spin 1s linear infinite;
+            margin:0 auto 20px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .loading-text { color:#c9a0dc; font-size:16px; }
+        .chat-container {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(201,160,220,0.15);
+            border-radius:15px; margin-top:30px; overflow:hidden;
+        }
+        .chat-header {
+            background:rgba(201,160,220,0.1); padding:20px; display:flex; align-items:center; gap:15px;
+            border-bottom:1px solid rgba(201,160,220,0.1);
+        }
+        .chat-avatar {
+            width:50px; height:50px; border-radius:50%;
+            background:linear-gradient(135deg, #667eea, #764ba2);
+            display:flex; align-items:center; justify-content:center; font-size:24px;
+        }
+        .chat-name { font-size:18px; color:#e8d0b0; margin-bottom:4px; }
+        .chat-status { font-size:13px; color:#908880; }
+        .chat-messages { max-height:400px; overflow-y:auto; padding:25px; }
+        .chat-message { display:flex; gap:15px; margin-bottom:20px; }
+        .chat-message.user { flex-direction:row-reverse; }
+        .chat-message-avatar {
+            width:40px; height:40px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; font-size:20px;
+        }
+        .chat-message.assistant .chat-message-avatar { background:linear-gradient(135deg, #667eea, #764ba2); }
+        .chat-message.user .chat-message-avatar { background:rgba(255,255,255,0.1); }
+        .chat-message-content {
+            max-width:75%; padding:15px 20px; border-radius:15px; line-height:1.7;
+        }
+        .chat-message.assistant .chat-message-content {
+            background:rgba(255,255,255,0.05); border:1px solid rgba(201,160,220,0.1); color:#c0b0a0;
+        }
+        .chat-message.user .chat-message-content {
+            background:rgba(102,126,234,0.15); color:#e8e0d0;
+        }
+        .chat-input-area {
+            padding:20px; border-top:1px solid rgba(201,160,220,0.1);
+            display:flex; gap:15px;
+        }
+        .chat-input {
+            flex:1; padding:15px 20px; background:rgba(0,0,0,0.3);
+            border:1px solid rgba(201,160,220,0.2); border-radius:25px;
+            color:#e8e0d0; font-size:15px;
+        }
+        .chat-input:focus { outline:none; border-color:#c9a0dc; }
+        .chat-send-btn {
+            width:50px; height:50px; border-radius:50%;
+            background:linear-gradient(135deg, #667eea, #764ba2);
+            border:none; color:white; font-size:20px; cursor:pointer; transition:transform 0.3s;
+        }
+        .chat-send-btn:hover:not(:disabled) { transform:scale(1.1); }
+        .chat-send-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .history-list { display:flex; flex-direction:column; gap:15px; }
+        .history-item {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(201,160,220,0.15);
+            border-radius:15px; padding:25px; cursor:pointer; transition:all 0.3s;
+        }
+        .history-item:hover { background:rgba(201,160,220,0.05); border-color:rgba(201,160,220,0.3); }
+        .history-date { font-size:13px; color:#706860; margin-bottom:10px; }
+        .history-type {
+            display:inline-block; padding:4px 12px; background:rgba(201,160,220,0.15);
+            border-radius:12px; font-size:12px; color:#c9a0dc; margin-bottom:12px;
+        }
+        .history-question { font-size:17px; color:#e8d0b0; margin-bottom:12px; }
+        .history-cards { font-size:14px; color:#908880; }
+        .empty-history { text-align:center; padding:80px 20px; color:#706860; }
+        .empty-history-icon { font-size:80px; margin-bottom:20px; display:block; }
+        .action-buttons { display:flex; gap:15px; justify-content:center; margin-top:30px; flex-wrap:wrap; }
+        .action-btn {
+            padding:14px 35px; border-radius:30px; font-size:15px;
+            border:none; cursor:pointer; transition:all 0.3s; letter-spacing:2px;
+        }
+        .action-btn.secondary {
+            background:rgba(255,255,255,0.1); color:#e8e0d0;
+            border:1px solid rgba(201,160,220,0.2);
+        }
+        .action-btn.secondary:hover { background:rgba(255,255,255,0.15); }
+        .action-btn.primary { background:linear-gradient(135deg, #667eea, #764ba2); color:white; }
+        .action-btn.primary:hover { transform:scale(1.05); }
+        @media (max-width:768px) {
+            .app-title { font-size:28px; letter-spacing:4px; }
+            .card { width:140px; height:210px; }
+            .card-name { font-size:16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mystical-bg" id="mysticalBg"></div>
+    <div class="magic-circle"></div>
+    <div class="container">
+        <div class="header">
+            <h1 class="app-title">星语塔罗</h1>
+            <p class="app-subtitle">命运之门 · 心之所向</p>
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="App.showPage('home')">🏠 首页</div>
+                <div class="nav-tab" onclick="App.showPage('history')">📜 历史记录</div>
+            </div>
+        </div>
+        <div id="page-home" class="page active">
+            <div class="api-config">
+                <label class="api-label">✨ AI智能解读已就绪</label>
+                <p class="api-hint">🔮 连接宇宙能量中...尽情探索吧！</p>
+            </div>
+            <div class="mode-grid">
+                <div class="mode-card" onclick="App.startMode('daily')">
+                    <div class="mode-icon">☀️</div>
+                    <div class="mode-name">每日运势</div>
+                    <div class="mode-desc">单牌抽取，快速查看今日能量指引</div>
+                </div>
+                <div class="mode-card" onclick="App.startMode('triangle')">
+                    <div class="mode-icon">🔮</div>
+                    <div class="mode-name">命运三相阵</div>
+                    <div class="mode-desc">三张牌联动，解读过去、现在与未来</div>
+                </div>
+            </div>
+        </div>
+        <div id="page-ritual" class="page">
+            <div class="ritual-stage" id="ritualStage"></div>
+        </div>
+        <div id="page-history" class="page">
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+    <script>
+        // ==================== 塔罗牌数据 ====================
+        const TarotData = {
+            majorArcana: [
+                { id:0, name:'愚者', icon:'🃏', upright:'新的开始、冒险、天真、自由、自发性', reversed:'鲁莽、冒险失败、不负责任、愚蠢' },
+                { id:1, name:'魔术师', icon:'🎭', upright:'创造力、技能、意志力、自信、能力', reversed:'欺骗、操纵、技能不足、欺骗' },
+                { id:2, name:'女祭司', icon:'🌙', upright:'直觉、神秘、潜意识、智慧、内在知识', reversed:'压抑直觉、表面肤浅、隐藏的真相' },
+                { id:3, name:'女皇', icon:'👑', upright:'丰饶、母性、自然、感官享受、创造力', reversed:'依赖、创造力受阻、空虚、焦虑' },
+                { id:4, name:'皇帝', icon:'👨', upright:'权威、结构、控制、父亲形象、稳定', reversed:'暴政、僵化、冷酷、缺乏纪律' },
+                { id:5, name:'教皇', icon:'⛪', upright:'传统、信仰、精神指引、教育、精神智慧', reversed:'打破传统、挑战权威、新的信仰' },
+                { id:6, name:'恋人', icon:'💞', upright:'爱情、选择、和谐、价值观、关系', reversed:'不和谐、价值观冲突、分离' },
+                { id:7, name:'战车', icon:'🏛️', upright:'胜利、意志力、决心、自我控制、成功', reversed:'失去控制、攻击性、失败' },
+                { id:8, name:'力量', icon:'🦁', upright:'勇气、耐心、控制、同情心、内在力量', reversed:'软弱、自我怀疑、不安全感' },
+                { id:9, name:'隐士', icon:'🏔️', upright:'内省、孤独、寻求真理、指引、内省', reversed:'孤立、孤独、退缩、排斥' },
+                { id:10, name:'命运之轮', icon:'🎡', upright:'变化、周期、转折点、运气、命运', reversed:'阻碍、不利变化、失控' },
+                { id:11, name:'正义', icon:'⚖️', upright:'公平、真理、因果、法律、公正', reversed:'不公正、不诚实、不公正' },
+                { id:12, name:'倒吊人', icon:'🙃', upright:'牺牲、新视角、等待、放下、牺牲', reversed:'拖延、无谓牺牲、停滞' },
+                { id:13, name:'死神', icon:'💀', upright:'结束、转变、重生、过渡、结束', reversed:'抗拒改变、停滞、无法放手' },
+                { id:14, name:'节制', icon:'⚗️', upright:'平衡、适度、耐心、和谐、平衡', reversed:'失衡、过度、缺乏长远眼光' },
+                { id:15, name:'恶魔', icon:'👿', upright:'束缚、物质主义、欲望、阴暗面、诱惑', reversed:'解放、克服诱惑、重获力量' },
+                { id:16, name:'高塔', icon:'🏚️', upright:'突变、觉醒、破坏、启示、突变', reversed:'逃避灾难、恐惧改变、拖延不可避免的事' },
+                { id:17, name:'星星', icon:'⭐', upright:'希望、灵感、平静、疗愈、更新', reversed:'失望、缺乏信心、不信任' },
+                { id:18, name:'月亮', icon:'🌕', upright:'幻觉、恐惧、潜意识、不安、焦虑', reversed:'释放恐惧、揭示真相、清晰' },
+                { id:19, name:'太阳', icon:'☀️', upright:'快乐、成功、活力、积极、乐观', reversed:'暂时失败、悲观、缺乏乐趣' },
+                { id:20, name:'审判', icon:'📯', upright:'觉醒、重生、救赎、决定、重生', reversed:'自我怀疑、逃避审视、拒绝召唤' },
+                { id:21, name:'世界', icon:'🌍', upright:'完成、整合、成就、旅行、圆满', reversed:'未完成、缺乏圆满、延迟' }
+            ],
+            getAllCards() { return [...this.majorArcana]; },
+            getPersonalizedReading(cards, type, question) {
+                const cardNames = cards.map(c => c.name).join('、');
+                let summary, detailed, advice, warning, lucky;
+                let echo, connection, conclusion;
+                if (type === 'daily') {
+                    const card = cards[0];
+                    summary = `今日你抽到了「${card.name}」（${card.position}）！这是宇宙给你的特别信号。`;
+                    if (card.name === '愚者') {
+                        detailed = '今天是适合冒险的一天！也许会有新的机会出现，保持开放的心态去迎接吧。不要害怕未知，勇敢地迈出脚步。';
+                        advice = '今天不妨试着做一些不一样的事情，走一条没走过的路，或是尝试一个新的爱好。';
+                        warning = '但是要注意，不要因为过于冒险而忽略了实际问题，凡事三思而后行。';
+                        lucky = '今日幸运提示：保持童心，相信直觉！';
+                    } else if (card.name === '魔术师') {
+                        detailed = '今天你的创造力爆棚！这是开始新项目、学习新技能的好日子。你有能力把想法变成现实。';
+                        advice = '利用今天的能量，着手推进你想做的事情。你的能力和自信是你的优势。';
+                        warning = '注意不要过于自信，或是用手段去操控别人。保持真诚。';
+                        lucky = '今日幸运提示：相信你的能力！';
+                    } else if (card.name === '月亮') {
+                        detailed = '今天可能会有些情绪波动，或是有些事情让你感到不安。这其实是你的潜意识在和你对话。';
+                        advice = '不妨给自己一些独处的时间，写日记、冥想，听听内心的声音。';
+                        warning = '不要被表面的恐惧所吓倒，很多时候只是我们自己在吓自己。';
+                        lucky = '今日幸运提示：相信你的直觉！';
+                    } else if (card.name === '太阳') {
+                        detailed = '今天是充满阳光的一天！快乐、成功、活力四射，适合和朋友相聚，或是去户外走走。';
+                        advice = '把握今天的好能量，去做让你开心的事情，把这份快乐传递给身边的人。';
+                        warning = '即使一切顺利，也不要过于骄傲，保持感恩和谦逊。';
+                        lucky = '今日幸运提示：微笑面对一切！';
+                    } else if (card.name === '死神') {
+                        detailed = '今天可能会带来结束的能量。记住，结束只是新的开始，不要害怕改变，拥抱它。';
+                        advice = '这是放下过去的好时机。有些事情该结束了，才能让新的进来。';
+                        warning = '不要抗拒改变，抗拒只会让你更痛苦。放手，然后前进。';
+                        lucky = '今日幸运提示：拥抱变化！';
+                    } else if (card.name === '恋人') {
+                        detailed = '今天关于关系和选择的能量很强。可能会有感情上的消息，或是需要做一些决定。';
+                        advice = '听从内心，做出符合你价值观的选择。真诚面对自己和他人。';
+                        warning = '不要为了迎合别人而做决定，也不要在冲动下做选择。';
+                        lucky = '今日幸运提示：让爱指引你！';
+                    } else {
+                        detailed = `「${card.name}」（${card.position}）的能量围绕着你。${card.meaning}。这是今天给你的启示。`;
+                        advice = '保持开放的心态，观察今天发生的事情，它们可能会给你带来重要的线索。';
+                        warning = '不要过于执着于某个结果，一切都是最好的安排。';
+                        lucky = '今日幸运提示：保持正念，活在当下！';
+                    }
+                    return { summary, detailed, advice, warning, lucky };
+                } else {
+                    echo = `关于你的问题「${question || '你的探索'}」，三张牌揭示了你的命运轨迹。`;
+                    const card0 = cards[0]; const card1 = cards[1]; const card2 = cards[2];
+                    connection = `过去的「${card0.name}」（${card0.position}）给你带来了${card0.meaning}的影响。现在的「${card1.name}」（${card1.position}）展示着${card1.meaning}。未来的「${card2.name}」（${card2.position}）预示着${card2.meaning}。`;
+                    advice = '从过去的经历中学习，把握现在的能量，以开放的心态迎接未来。你有能力创造你想要的未来。';
+                    warning = '不要被过去的经历束缚，也不要过度焦虑未来。现在，才是你真正拥有的。';
+                    conclusion = '相信过程，相信时间会给你最好的答案。记住，命运掌握在你自己手中！';
+                    return { echo, connection, advice, warning, conclusion };
+                }
+            },
+            getLocalReading(cards, type, question) {
+                return this.getPersonalizedReading(cards, type, question);
+            }
+        };
+        // ==================== 抽牌逻辑 ====================
+        const CardDrawing = {
+            getDailySeed() {
+                const now = new Date();
+                return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+            },
+            shuffleCards(cards) {
+                const shuffled = [...cards];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            },
+            shuffleCardsSeeded(cards, seed) {
+                const shuffled = [...cards];
+                let s = seed;
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    s = (s * 9301 + 49297) % 233280;
+                    const j = Math.floor((s / 233280) * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            },
+            drawCards(count, useSeed = false) {
+                const allCards = TarotData.getAllCards();
+                let shuffled;
+                if (useSeed) {
+                    shuffled = this.shuffleCardsSeeded(allCards, this.getDailySeed());
+                } else {
+                    shuffled = this.shuffleCards(allCards);
+                }
+                const drawn = [];
+                for (let i = 0; i < count; i++) {
+                    const card = shuffled[i];
+                    let isUpright;
+                    if (useSeed) {
+                        isUpright = ((this.getDailySeed() + i) % 2) === 0;
+                    } else {
+                        isUpright = Math.random() > 0.5;
+                    }
+                    drawn.push({ ...card, position:isUpright?'正位':'逆位', positionEn:isUpright?'upright':'reversed', meaning:isUpright?card.upright:card.reversed });
+                }
+                return drawn;
+            }
+        };
+        // ==================== AI 调用（通过后端） ====================
+        const AI = {
+            async getReading(cards, type, question) {
+                try {
+                    const cardsInfo = cards.map((c, i) => {
+                        const labels = type === 'triangle' ? ['【过去】','【现在】','【未来】'] : [''];
+                        return `${labels[i] || ''}「${c.name}」(${c.position})：${c.meaning}`;
+                    }).join('\n');
+                    const prompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师。${type === 'daily' ? '这是每日运势占卜。' : ''}用户的问题/主题：${question || '今日运势指引'}\n抽到的牌：${cardsInfo}\n请用温柔、神秘、治愈的语气给出解读，不说绝对宿命，侧重心理投射与成长指引。`;
+                    const response = await fetch('/api/chat', {
+                        method: 'POST', 
+                        headers: { 'Content-Type':'application/json' },
+                        body: JSON.stringify({ messages:[
+                            { role:'system', content:'你是专业温柔的AI塔罗师莱诺薇，给出温暖治愈的塔罗解读。' },
+                            { role:'user', content:prompt }
+                        ]})
+                    });
+                    if (!response.ok) { return null; }
+                    const data = await response.json();
+                    const aiText = data?.choices?.[0]?.message?.content;
+                    if (!aiText) return null;
+                    if (type === 'daily') {
+                        return {
+                            summary: `今日抽到「${cards[0]?.name || '牌'}」！`,
+                            detailed: aiText,
+                            advice: '保持正念，相信你的直觉。',
+                            warning: '不要过于执着于某个特定结果，保持灵活和开放。',
+                            lucky: '今日幸运提示：活在当下，感恩一切！'
+                        };
+                    } else {
+                        return {
+                            echo: `关于「${question || '你的问题'}」，宇宙给了你指引。`,
+                            connection: aiText,
+                            advice: '相信过程，勇敢前行。',
+                            warning: '保持开放，不要焦虑。',
+                            conclusion: '命运掌握在你自己手中！'
+                        };
+                    }
+                } catch (e) { console.error('AI Error:', e); return null; }
+            },
+            async chat(context, userMessage) {
+                try {
+                    const cardsInfo = context.cards.map(c => `「${c.name}」(${c.position})`).join('、');
+                    const prompt = `你是"莱诺薇"，一位专业、温柔、有仪式感的AI塔罗师。之前的占卜：牌阵${context.type}，问题「${context.question}」，抽到的牌：${cardsInfo}\n用户继续问：${userMessage}\n请以莱诺薇的身份回答，结合之前的牌面。`;
+                    const response = await fetch('/api/chat', {
+                        method: 'POST', 
+                        headers: { 'Content-Type':'application/json' },
+                        body: JSON.stringify({ messages:[
+                            { role:'system', content:'你是专业温柔的AI塔罗师莱诺薇。' },
+                            { role:'user', content:prompt }
+                        ]})
+                    });
+                    if (!response.ok) return '让我用心回答你...';
+                    const data = await response.json();
+                    return data?.choices?.[0]?.message?.content || '让我试着回答你...';
+                } catch (e) { return '让我用我所知来回答你...'; }
+            }
+        };
+        // ==================== 存储 ====================
+        const Storage = {
+            KEY:'starTarotHistory', MAX_ITEMS:12,
+            save(reading) {
+                let history = this.getAll();
+                reading.id = Date.now(); reading.date = new Date().toLocaleString('zh-CN');
+                history.unshift(reading); if (history.length > this.MAX_ITEMS) history = history.slice(0, this.MAX_ITEMS);
+                localStorage.setItem(this.KEY, JSON.stringify(history)); return reading;
+            },
+            getAll() { try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); } catch { return []; } }
+        };
+        // ==================== UI ====================
+        const UI = {
+            createParticles() {
+                const container = document.getElementById('mysticalBg');
+                for (let i = 0; i < 80; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = Math.random() * 100 + '%';
+                    p.style.animationDelay = Math.random() * 3 + 's';
+                    container.appendChild(p);
+                }
+            },
+            renderRitualStage(content) {
+                document.getElementById('ritualStage').innerHTML = content;
+            },
+            renderCards(cards, labels = []) {
+                return `
+                    <div class="cards-container">
+                        ${cards.map((card, i) => `
+                            <div class="card-wrapper">
+                                ${labels[i] ? `<div class="card-label">${labels[i]}</div>` : ''}
+                                <div class="card" id="card-${i}">
+                                    <div class="card-face card-front"></div>
+                                    <div class="card-face card-back">
+                                        <div class="card-icon">${card.icon}</div>
+                                        <div class="card-name">${card.name}</div>
+                                        <div class="card-position ${card.positionEn}">${card.position}</div>
+                                        <div class="card-meaning">${card.meaning}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+            renderReading(reading, type) {
+                const safeGet = (obj, key, def = '让我们一起感受这张牌的能量吧...') => {
+                    if (!obj) return def;
+                    return obj[key] || def;
+                };
+                if (type === 'daily') {
+                    return `
+                        <div class="reading-panel">
+                            <div class="reading-title">✦ 命运解读 ✦</div>
+                            <div class="reading-section"><div class="reading-section-title">今日摘要</div><div class="reading-section-content">${safeGet(reading,'summary')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">详细解读</div><div class="reading-section-content">${safeGet(reading,'detailed')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">行动建议</div><div class="reading-section-content">${safeGet(reading,'advice')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">注意事项</div><div class="reading-section-content">${safeGet(reading,'warning')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">幸运能量提示</div><div class="reading-section-content">${safeGet(reading,'lucky')}</div></div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="reading-panel">
+                            <div class="reading-title">✦ 命运解读 ✦</div>
+                            <div class="reading-section"><div class="reading-section-title">问题回响</div><div class="reading-section-content">${safeGet(reading,'echo')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">三牌连线</div><div class="reading-section-content">${safeGet(reading,'connection')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">行动建议</div><div class="reading-section-content">${safeGet(reading,'advice')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">风险提醒</div><div class="reading-section-content">${safeGet(reading,'warning')}</div></div>
+                            <div class="reading-section"><div class="reading-section-title">最终结语</div><div class="reading-section-content">${safeGet(reading,'conclusion')}</div></div>
+                        </div>
+                    `;
+                }
+            },
+            renderChat(context) {
+                return `
+                    <div class="chat-container">
+                        <div class="chat-header"><div class="chat-avatar">🔮</div><div><div class="chat-name">莱诺薇</div><div class="chat-status">等待你的提问...</div></div></div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-message assistant">
+                                <div class="chat-message-avatar">🔮</div>
+                                <div class="chat-message-content">你好，我是莱诺薇。关于这次的牌面，你还有什么想知道的吗？</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="向莱诺薇提问...">
+                            <button class="chat-send-btn" id="chatSendBtn" onclick="App.sendChat()">➤</button>
+                        </div>
+                    </div>
+                `;
+            },
+            renderHistory() {
+                const history = Storage.getAll();
+                const historyList = document.getElementById('historyList');
+                if (history.length === 0) {
+                    historyList.innerHTML = `<div class="empty-history"><div class="empty-history-icon">📜</div><div>还没有占卜记录</div><div style="margin-top:15px; font-size:14px;">开始你的第一次塔罗占卜吧</div></div>`;
+                    return;
+                }
+                historyList.innerHTML = history.map(item => `
+                    <div class="history-item" onclick="App.loadHistoryItem(${item.id})">
+                        <div class="history-date">${item.date}</div>
+                        <div class="history-type">${item.type === 'daily' ? '☀️ 每日运势' : '🔮 命运三相阵'}</div>
+                        <div class="history-question">${item.question || '今日运势指引'}</div>
+                        <div class="history-cards">抽到：${item.cards.map(c => c.name).join('、')}</div>
+                    </div>
+                `).join('');
+            }
+        };
+        // ==================== 主应用 ====================
+        const App = {
+            currentMode:null, currentCards:null, currentReading:null,
+            currentQuestion:'', selectedCategory:'', chatContext:null,
+            init() {
+                UI.createParticles();
+            },
+            showPage(page) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                if (page === 'home') {
+                    document.getElementById('page-home').classList.add('active');
+                    document.querySelectorAll('.nav-tab')[0].classList.add('active');
+                } else if (page === 'ritual') {
+                    document.getElementById('page-ritual').classList.add('active');
+                } else if (page === 'history') {
+                    document.getElementById('page-history').classList.add('active');
+                    document.querySelectorAll('.nav-tab')[1].classList.add('active');
+                    UI.renderHistory();
+                }
+            },
+            startMode(mode) {
+                this.currentMode = mode; this.showPage('ritual');
+                if (mode === 'daily') { this.renderDailyRitual(); }
+                else if (mode === 'triangle') { this.renderTriangleRitual(); }
+            },
+            renderDailyRitual() {
+                UI.renderRitualStage(`
+                    <div class="stage-instruction">
+                        <div class="instruction-title">☀️ 每日运势</div>
+                        <div class="instruction-text">静心冥想，点击下方按钮，抽取属于你的今日指引</div>
+                    </div>
+                    <button class="summon-btn" onclick="App.startDailyDraw()">开始召唤</button>
+                `);
+            },
+            renderTriangleRitual() {
+                UI.renderRitualStage(`
+                    <div class="stage-instruction">
+                        <div class="instruction-title">🔮 命运三相阵</div>
+                        <div class="instruction-text">让我们一起探索过去、现在与未来的联系</div>
+                    </div>
+                    <div class="question-section">
+                        <div class="question-label">你的问题（可选）</div>
+                        <textarea class="question-textarea" id="questionInput" placeholder="在此输入你的问题..."></textarea>
+                    </div>
+                    <div class="category-selector">
+                        <div class="category-btn" data-cat="感情" onclick="App.selectCategory(this)">💗 感情</div>
+                        <div class="category-btn" data-cat="事业" onclick="App.selectCategory(this)">💼 事业</div>
+                        <div class="category-btn" data-cat="财务" onclick="App.selectCategory(this)">💰 财务</div>
+                        <div class="category-btn" data-cat="学业" onclick="App.selectCategory(this)">📚 学业</div>
+                        <div class="category-btn" data-cat="人际" onclick="App.selectCategory(this)">👥 人际</div>
+                        <div class="category-btn" data-cat="综合" onclick="App.selectCategory(this)">✨ 综合</div>
+                    </div>
+                    <button class="summon-btn" onclick="App.startTriangleDraw()">开始召唤</button>
+                `);
+            },
+            selectCategory(el) {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+                el.classList.add('selected');
+                this.selectedCategory = el.dataset.cat;
+                const qInput = document.getElementById('questionInput');
+                if (qInput && !qInput.value) qInput.value = el.dataset.cat + '方面指引';
+            },
+            async startDailyDraw() {
+                const btn = document.querySelector('.summon-btn');
+                btn.disabled = true; btn.textContent = '召唤中...';
+                this.currentCards = CardDrawing.drawCards(1, true);
+                UI.renderRitualStage(`
+                    <div class="stage-instruction">
+                        <div class="instruction-title">✨ 命运显现中</div>
+                        <div class="instruction-text">宇宙正在为你挑选今日的指引...</div>
+                    </div>
+                    ${UI.renderCards(this.currentCards)}
+                `);
+                document.querySelectorAll('.card').forEach(card => card.classList.add('spinning'));
+                await this.delay(2000);
+                document.querySelectorAll('.card').forEach(card => { card.classList.remove('spinning'); card.classList.add('flipped'); });
+                await this.delay(1000);
+                await this.showReading('daily');
+            },
+            currentTriangleStep:0,
+            async startTriangleDraw() {
+                const qInput = document.getElementById('questionInput');
+                this.currentQuestion = (qInput?.value || '').trim() || this.selectedCategory || '综合指引';
+                const btn = document.querySelector('.summon-btn');
+                btn.disabled = true; btn.textContent = '召唤中...';
+                this.currentCards = CardDrawing.drawCards(3, false);
+                this.currentTriangleStep = 0;
+                await this.showNextTriangleCard();
+            },
+            async showNextTriangleCard() {
+                const labels = ['唤醒过往之影','映照此刻之心','窥见未来之门'];
+                if (this.currentTriangleStep < 3) {
+                    const cardsToShow = this.currentCards.slice(0, this.currentTriangleStep + 1);
+                    UI.renderRitualStage(`
+                        <div class="stage-instruction">
+                            <div class="instruction-title">✦ ${labels[this.currentTriangleStep]} ✦</div>
+                            <div class="instruction-text">${this.currentTriangleStep < 2 ? '点击按钮揭示下一张牌' : '正在解读命运的讯息...'}</div>
+                        </div>
+                        ${UI.renderCards(cardsToShow, labels.slice(0, this.currentTriangleStep + 1))}
+                        ${this.currentTriangleStep < 2 ? `<button class="summon-btn" onclick="App.revealNextCard()">揭示下一张</button>` : ''}
+                    `);
+                    const cards = document.querySelectorAll('.card');
+                    if (cards.length > 0) {
+                        const lastCard = cards[cards.length - 1];
+                        lastCard.classList.add('spinning');
+                        await this.delay(1500);
+                        lastCard.classList.remove('spinning');
+                        lastCard.classList.add('flipped');
+                    }
+                    if (this.currentTriangleStep === 2) {
+                        await this.delay(1000);
+                        await this.showReading('triangle');
+                    }
+                }
+            },
+            async revealNextCard() { this.currentTriangleStep++; await this.showNextTriangleCard(); },
+            async showReading(type) {
+                UI.renderRitualStage(`
+                    <div class="stage-instruction">
+                        <div class="instruction-title">✨ 解读命运</div>
+                        <div class="instruction-text">莱诺薇正在为你解读牌面的讯息...</div>
+                    </div>
+                    ${UI.renderCards(this.currentCards, type === 'triangle' ? ['过去','现在','未来'] : [])}
+                    <div class="reading-panel"><div class="loading-ai"><div class="loading-spinner"></div><div class="loading-text">正在连接宇宙的讯息...</div></div></div>
+                `);
+                await this.delay(300);
+                document.querySelectorAll('.card').forEach(card => { if (!card.classList.contains('flipped')) card.classList.add('flipped'); });
+                let aiReading = null;
+                try { aiReading = await AI.getReading(this.currentCards, type, this.currentQuestion); } catch (e) { console.error(e); }
+                const localReading = TarotData.getLocalReading(this.currentCards, type, this.currentQuestion);
+                this.currentReading = aiReading || localReading;
+                this.chatContext = { type:type, question:this.currentQuestion, cards:this.currentCards, reading:this.currentReading };
+                Storage.save({ type:type, question:this.currentQuestion, cards:this.currentCards, reading:this.currentReading });
+                const questionCardHtml = type === 'daily' ? '' : `
+                    <div class="question-card">
+                        <div class="question-label">你的问题</div>
+                        <div class="question-text">${this.currentQuestion}</div>
+                    </div>
+                `;
+                UI.renderRitualStage(`
+                    <div class="stage-instruction"><div class="instruction-title">✦ 命运显现 ✦</div></div>
+                    ${questionCardHtml}
+                    ${UI.renderCards(this.currentCards, type === 'triangle' ? ['过去','现在','未来'] : [])}
+                    ${UI.renderReading(this.currentReading, type)}
+                    ${UI.renderChat(this.chatContext)}
+                    <div class="action-buttons">
+                        <button class="action-btn secondary" onclick="App.goHome()">返回首页</button>
+                        <button class="action-btn primary" onclick="App.startMode('${type}')">再来一次</button>
+                    </div>
+                `);
+                await this.delay(300);
+                document.querySelectorAll('.card').forEach(card => card.classList.add('flipped'));
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.sendChat(); });
+            },
+            async sendChat() {
+                const input = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('chatSendBtn');
+                const msg = input.value.trim();
+                if (!msg || !this.chatContext) return;
+                this.addChatMessage('user', msg);
+                input.value = '';
+                sendBtn.disabled = true;
+                const aiResp = await AI.chat(this.chatContext, msg);
+                this.addChatMessage('assistant', aiResp);
+                sendBtn.disabled = false;
+            },
+            addChatMessage(role, content) {
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+                const el = document.createElement('div');
+                el.className = `chat-message ${role}`;
+                el.innerHTML = `
+                    <div class="chat-message-avatar">${role === 'assistant' ? '🔮' : '👤'}</div>
+                    <div class="chat-message-content">${content}</div>
+                `;
+                container.appendChild(el);
+                container.scrollTop = container.scrollHeight;
+            },
+            async loadHistoryItem(id) {
+                const history = Storage.getAll();
+                const item = history.find(h => h.id === id);
+                if (!item) return;
+                this.currentMode = item.type; this.currentCards = item.cards;
+                this.currentReading = item.reading; this.currentQuestion = item.question;
+                this.chatContext = { type:item.type, question:item.question, cards:item.cards, reading:item.reading };
+                this.showPage('ritual');
+                const questionCardHtml = item.type === 'daily' ? '' : `
+                    <div class="question-card">
+                        <div class="question-label">你的问题</div>
+                        <div class="question-text">${item.question}</div>
+                    </div>
+                `;
+                UI.renderRitualStage(`
+                    <div class="stage-instruction"><div class="instruction-title">✦ 历史记录 ✦</div></div>
+                    ${questionCardHtml}
+                    ${UI.renderCards(item.cards, item.type === 'triangle' ? ['过去','现在','未来'] : [])}
+                    ${UI.renderReading(item.reading, item.type)}
+                    ${UI.renderChat(this.chatContext)}
+                    <div class="action-buttons">
+                        <button class="action-btn secondary" onclick="App.goHome()">返回首页</button>
+                    </div>
+                `);
+                await this.delay(300);
+                document.querySelectorAll('.card').forEach(card => card.classList.add('flipped'));
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.sendChat(); });
+            },
+            goHome() {
+                this.currentMode = null; this.currentCards = null;
+                this.currentReading = null; this.currentQuestion = '';
+                this.selectedCategory = '';
+                this.showPage('home');
+            },
+            delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+        };
+        App.init();
+    </script>
+</body>
+</html>
